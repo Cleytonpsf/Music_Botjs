@@ -124,6 +124,7 @@ bot.on("message", async msg =>{
     if(msg.content.startsWith(prefix + "play")){
         try {
             let url = msg.content.slice(6);
+            const playlist = "https://www.youtube.com/playlist?list=";
             if(url.length == 0)
                 return msg.reply("Busque por alguma coisa");
 
@@ -153,61 +154,83 @@ bot.on("message", async msg =>{
                         playMusic(msg);
                     }
                 })
-            }else{ 
-                youtube.search.list({
-                    q: url,
-                    part: "snippet",
-                    fields: "items(id(videoId), snippet(title, channelTitle))",
-                    type: "video"
-                }, async function(err, result){
-                    if(err){
-                        console.log(err);
-                    }
-                    if(result){
-                        const listResult = [];
+            }else{
+                if(url.startsWith(playlist)){
+                    let id = url.slice(38);
+                    youtube.playlistItems.list({
+                        "part": ["snippet"],
+                        "playlistId": [id],
+                        "maxResults": 50
+                    }).then(result => {
                         result.data.items.forEach(element => {
-                            const dataItems = {
-                                "title": element.snippet.title,
-                                "channel": element.snippet.channelTitle,
-                                "id": "https://www.youtube.com/watch?v="+element.id.videoId
-                            }
-                            listResult.push(dataItems);
+                            servers[msg.guild.id].queue.push("https://youtube.com/watch?v=" + element.snippet.resourceId.videoId);
+                            servers[msg.guild.id].title.push(element.snippet.title);
+                            servers[msg.guild.id].channel.push(element.snippet.channelTitle);
                         });
 
-                        const embed = new Discord.MessageEmbed()
-                        .setColor([040,040,200])
-                        .setAuthor("Music BotJs")
-                        .setDescription("**Escolha a música! Clique em uma das Reações para escolher a música desejada**");
+                        msg.channel.send("Playlist adicionada");
+                        playMusic(msg);
 
-                        for(let i in listResult){
-                            embed.addField(`${parseInt(i)+1}: ${listResult[i].title}`, `${listResult[i].channel}`);
+                    }).catch(err => {
+                        console.log(err);
+                    })
+                }
+                else{
+                    youtube.search.list({
+                        q: url,
+                        part: "snippet",
+                        fields: "items(id(videoId), snippet(title, channelTitle))",
+                        type: "video"
+                    }, async function(err, result){
+                        if(err){
+                            console.log(err);
                         }
-                        msg.channel.send(embed).then(embedMessage =>{
-                            const possibleReact = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
-                            possibleReact.forEach(element=>{
-                                embedMessage.react(element);
-                            })
-                            
-                            const filter = (reaction, user) =>{
-                                return possibleReact.includes(reaction.emoji.name) && 
-                                user.id == msg.author.id;
-                            }
-                            embedMessage.awaitReactions(filter, {max: 1, time: 30000, erros: ["time"]})
-                            .then(collected => {
-                                const reaction = collected.first();
-                                const idOption = possibleReact.indexOf(reaction.emoji.name);
-                                msg.channel.send(`**Música escolhida:** ${listResult[idOption].title} do canal ${listResult[idOption].channel}`);
-                                servers[msg.guild.id].queue.push(listResult[idOption].id);
-                                servers[msg.guild.id].title.push(listResult[idOption].title);
-                                servers[msg.guild.id].channel.push(listResult[idOption].channel);
-                                playMusic(msg);
-                            }).catch(err=>{
-                                msg.reply("Opção inválida ou não escolhida");
-                                console.log(err);
+                        if(result){
+                            const listResult = [];
+                            result.data.items.forEach(element => {
+                                const dataItems = {
+                                    "title": element.snippet.title,
+                                    "channel": element.snippet.channelTitle,
+                                    "id": "https://www.youtube.com/watch?v="+element.id.videoId
+                                }
+                                listResult.push(dataItems);
                             });
-                        })
-                    }
-                });
+    
+                            const embed = new Discord.MessageEmbed()
+                            .setColor([040,040,200])
+                            .setAuthor("Music BotJs")
+                            .setDescription("**Escolha a música! Clique em uma das Reações para escolher a música desejada**");
+    
+                            for(let i in listResult){
+                                embed.addField(`${parseInt(i)+1}: ${listResult[i].title}`, `${listResult[i].channel}`);
+                            }
+                            msg.channel.send(embed).then(embedMessage =>{
+                                const possibleReact = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"]
+                                possibleReact.forEach(element=>{
+                                    embedMessage.react(element);
+                                })
+                                
+                                const filter = (reaction, user) =>{
+                                    return possibleReact.includes(reaction.emoji.name) && 
+                                    user.id == msg.author.id;
+                                }
+                                embedMessage.awaitReactions(filter, {max: 1, time: 30000, erros: ["time"]})
+                                .then(collected => {
+                                    const reaction = collected.first();
+                                    const idOption = possibleReact.indexOf(reaction.emoji.name);
+                                    msg.channel.send(`**Música escolhida:** ${listResult[idOption].title} do canal ${listResult[idOption].channel}`);
+                                    servers[msg.guild.id].queue.push(listResult[idOption].id);
+                                    servers[msg.guild.id].title.push(listResult[idOption].title);
+                                    servers[msg.guild.id].channel.push(listResult[idOption].channel);
+                                    playMusic(msg);
+                                }).catch(err=>{
+                                    msg.reply("Opção inválida ou não escolhida");
+                                    console.log(err);
+                                });
+                            })
+                        }
+                    });
+                }
             }    
 
         } catch (error) {
