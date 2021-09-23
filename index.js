@@ -30,7 +30,6 @@ bot.on("guildCreate", (guild)=>{         //guilda é a mesma coisa que servidor
     }
 
     saveServer(guild.id);
-   
 });
 
 bot.on("ready", ()=>{
@@ -115,9 +114,48 @@ bot.on("message", async msg =>{
         return;
     if(!msg.content.startsWith(prefix))
         return;
-    if(!msg.member.voice.channel){
+    if(!msg.member.voice.channel && !msg.content.startsWith(prefix + "commands")){
         msg.reply("Entre em um canal de voz para usar os comandos!");
         return;
+    }else if(msg.content.startsWith(prefix + "commands")){
+        const commands = [
+            { 
+                title: "!play",
+                body: "Digite !play e o nome ou link para escolher a música"
+            },
+            { 
+                title: "!pause",
+                body: "Digite !pause para pausar a música"
+            },
+            { 
+                title: "!resume",
+                body: "Digite !resume para dar play novamente na música"
+            },
+            { 
+                title: "!skip",
+                body: "Digite !skip para pular a música"
+            },
+            { 
+                title: "!list",
+                body: "Digite !list para ver todas as músicas que estão na fila"
+            },
+            {
+                title: "!clear",
+                body: "Digite !clear para remover todas as músicas da fila"
+            },
+            { 
+                title: "!leave",
+                body: "Digite !leave para desconectar e resetar o bot"
+            }
+        ]
+        const embed = new Discord.MessageEmbed()
+                        .setColor([040,040,200])
+                        .setAuthor("Music BotJs")
+                        .setDescription("**Lista de comandos**");
+        for(let i in commands){
+            embed.addField(`${parseInt(i)+1}: ${commands[i].title}`, `${commands[i].body}`);
+        }
+        msg.channel.send(embed);
     }
 
     //comandos
@@ -294,49 +332,7 @@ bot.on("message", async msg =>{
         servers[msg.guild.id].channel = [];
     }
 
-    else if(msg.content == prefix + "commands"){
-        const commands = [
-            { 
-                title: "!play",
-                body: "Digite !play e o nome ou link para escolher a música"
-            },
-            { 
-                title: "!pause",
-                body: "Digite !pause para pausar a música"
-            },
-            { 
-                title: "!resume",
-                body: "Digite !resume para dar play novamente na música"
-            },
-            { 
-                title: "!skip",
-                body: "Digite !skip para pular a música"
-            },
-            { 
-                title: "!list",
-                body: "Digite !list para ver todas as músicas que estão na fila"
-            },
-            {
-                title: "!clear",
-                body: "Digite !clear para remover todas as músicas da fila"
-            },
-            { 
-                title: "!leave",
-                body: "Digite !leave para desconectar e resetar o bot"
-            }
-        ]
-        const embed = new Discord.MessageEmbed()
-                        .setColor([040,040,200])
-                        .setAuthor("Music BotJs")
-                        .setDescription("**Lista de comandos**");
-        for(let i in commands){
-            embed.addField(`${parseInt(i)+1}: ${commands[i].title}`, `${commands[i].body}`);
-        }
-        msg.channel.send(embed);
-    }
-    
-    else if(msg.content.startsWith(prefix)){
-        console.log("comando inválido");
+    else if(msg.content.startsWith(prefix) && !msg.content.startsWith(prefix + "commands")){
         msg.reply("Comando inválido, caso queira acessar a lista de comandos digite !commands");
     }
 })
