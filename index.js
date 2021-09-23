@@ -5,7 +5,7 @@ const fs = require("fs");
 require("dotenv").config();
 
 const bot = new Discord.Client();
-const prefix = process.env.PREFIX;
+const prefix = "!";
 
 const youtube = new google.youtube_v3.Youtube({
     version: "v3",
@@ -133,6 +133,12 @@ bot.on("message", async msg =>{
 
             if(ytdl.validateURL(url)){
                 let id = url.slice(32);
+                for(let i = 0; i<id.length; i++){
+                    if(id[i] == "&"){
+                        id = id.substring(0, i);
+                        i = id.length;
+                    }
+                }
                 youtube.search.list({
                     q: id,
                     part: "snippet",
@@ -316,7 +322,7 @@ bot.on("message", async msg =>{
             },
             { 
                 title: "!leave",
-                body: "Digite !leave para desconectar o bot do canal"
+                body: "Digite !leave para desconectar e resetar o bot"
             }
         ]
         const embed = new Discord.MessageEmbed()
