@@ -53,11 +53,8 @@ function stop() {
 
 function timer(msg) {
     seconds++;
-    console.log(seconds);
-    if(seconds > 180){
+    if(seconds > 180)
         leave(msg);
-        stop();
-    }
 }
 
 function leave(msg) {
