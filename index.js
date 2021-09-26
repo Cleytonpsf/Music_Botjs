@@ -6,6 +6,9 @@ require("dotenv").config();
 
 const bot = new Discord.Client();
 const prefix = "!";
+const mili = 1000;
+var seconds = 0;
+var stopwatch;
 
 const youtube = new google.youtube_v3.Youtube({
     version: "v3",
@@ -37,7 +40,39 @@ bot.on("ready", ()=>{
     loadServers();
 })
 
+function start(msg) {
+    stopwatch = setInterval(() => {
+        timer(msg);
+    }, mili);
+}
+
+function stop() {
+    clearInterval(stopwatch);
+    seconds = 0;
+}
+
+function timer(msg) {
+    seconds++;
+    console.log(seconds);
+    if(seconds > 180){
+        leave(msg);
+        stop();
+    }
+}
+
+function leave(msg) {
+    msg.member.voice.channel.leave();
+    servers[msg.guild.id].connection = null;
+    servers[msg.guild.id].dispatcher = null;
+    servers[msg.guild.id].queue = [];
+    servers[msg.guild.id].isPlaying = false;
+    servers[msg.guild.id].title = [];
+    servers[msg.guild.id].channel = [];
+    stop();
+}
+
 async function playMusic(msg) {
+    stop();
     if(servers[msg.guild.id].isPlaying == false){
         const playing = servers[msg.guild.id].queue[0];
         servers[msg.guild.id].isPlaying = true;
@@ -49,8 +84,10 @@ async function playMusic(msg) {
             servers[msg.guild.id].isPlaying = false;
             if(servers[msg.guild.id].queue.length > 0)
                 playMusic(msg);
-            else
+            else{
                 servers[msg.guild.id].dispatcher = null;
+                start(msg);
+            }
         })
     }
 }
@@ -286,16 +323,15 @@ bot.on("message", async msg =>{
     else if(msg.content == prefix + "pause"){
         servers[msg.guild.id].dispatcher.pause();
     }
-
+    
     else if(msg.content == prefix + "resume"){
         servers[msg.guild.id].dispatcher.resume();
     }
-
+    
     else if(msg.content == prefix + "skip"){
         servers[msg.guild.id].dispatcher.end();
-        playMusic(msg);
     }
-
+    
     else if(msg.content == prefix + "list"){
         let list = [servers[msg.guild.id].title, servers[msg.guild.id].channel];
         let length = list[0].length;
@@ -323,13 +359,7 @@ bot.on("message", async msg =>{
     }
 
     else if(msg.content == prefix + "leave"){
-        msg.member.voice.channel.leave();
-        servers[msg.guild.id].connection = null;
-        servers[msg.guild.id].dispatcher = null;
-        servers[msg.guild.id].queue = [];
-        servers[msg.guild.id].isPlaying = false;
-        servers[msg.guild.id].title = [];
-        servers[msg.guild.id].channel = [];
+        leave(msg);
     }
 
     else if(msg.content.startsWith(prefix) && !msg.content.startsWith(prefix + "commands")){
