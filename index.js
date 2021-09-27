@@ -53,7 +53,7 @@ function stop() {
 
 function timer(msg) {
     seconds++;
-    if(seconds > 180)
+    if(seconds > 600)
         leave(msg);
 }
 
