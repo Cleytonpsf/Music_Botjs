@@ -7,6 +7,7 @@ require("dotenv").config();
 const bot = new Discord.Client();
 const prefix = "!";
 const mili = 1000;
+const maxTime = 600;
 var seconds = 0;
 var stopwatch;
 
@@ -53,18 +54,21 @@ function stop() {
 
 function timer(msg) {
     seconds++;
-    if(seconds > 600)
+    if(seconds > maxTime)
         leave(msg);
 }
 
-function leave(msg) {
-    msg.member.voice.channel.leave();
-    servers[msg.guild.id].connection = null;
-    servers[msg.guild.id].dispatcher = null;
-    servers[msg.guild.id].queue = [];
-    servers[msg.guild.id].isPlaying = false;
-    servers[msg.guild.id].title = [];
-    servers[msg.guild.id].channel = [];
+async function leave(msg) {
+    console.log(msg.member.voice.channel)
+    if(msg.member.voice.channel != null){
+        msg.member.voice.channel.leave();
+        servers[msg.guild.id].connection = null;
+        servers[msg.guild.id].dispatcher = null;
+        servers[msg.guild.id].queue = [];
+        servers[msg.guild.id].isPlaying = false;
+        servers[msg.guild.id].title = [];
+        servers[msg.guild.id].channel = [];
+    }
     stop();
 }
 
