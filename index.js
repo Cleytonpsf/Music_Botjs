@@ -59,7 +59,6 @@ function timer(msg) {
 }
 
 async function leave(msg) {
-    console.log(msg.member.voice.channel)
     if(msg.member.voice.channel != null){
         msg.member.voice.channel.leave();
         servers[msg.guild.id].connection = null;
